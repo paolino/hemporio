@@ -1,82 +1,64 @@
 {-# language DeriveFunctor #-}
+{-# language ExplicitForAll #-}
 
 import Control.Monad
 import Text.CSV
 import Control.Arrow
+import Data.Time
+import Parser
+import Types
+import Control.Applicative
 
-newtype Consume c a = Consume {
-	runConsume :: c -> Either String (a, c)
-	} deriving Functor
+parseADate :: forall b. ParseTime b => String -> Either [Char] b
+parseADate x 
+    =  maybe 
+        (Left $ "date parsing error: " ++ x)
+        Right
+        $ parseTimeM True defaultTimeLocale "%Y/%m/%d" x
 
+parseHeader :: Consume L Header
+parseHeader 
+    = Header 
+    <$> field readE
+    <*> field readE
+    <*> field parseADate
 
-instance Applicative (Consume c) where
-	pure x = Consume $ \c -> Right (x,c)
-	Consume f <*> Consume g = Consume $ \c ->  do
-		(f', c')  <-  f c
-		(x , c'') <- g c'
-		return (f' x, c'')
+parseHeaders :: Consume L [Header]
+parseHeaders = do
+    n <- subtract 3 <$> count -- count records in next line
+    transposeN 3 -- transpose next 3 lines
+    replicateM_ 3 line -- drop 3 lines
+    replicateM n $ line >> parseHeader -- get headers
 
-instance Monad (Consume c) where
-	Consume f >>= g = Consume $ \c -> do
-		(x, c')  <-  f c
-		let Consume g' = g x
-		(x' , c'') <- g' c'
-		return (x', c'')
-		
-	
-data L = L CSV Record
+notNullText :: (Monad m, Alternative m) => [a] -> m [a]
+notNullText x =  do
+    guard (not $ null x) 
+    return x
 
-line = Consume f where
-	f (L [] r) =  Left "not enough lines"
-	f (L (l:ls) r) = Right ((), L ls l)
+parseProdotto :: Consume L Prodotto
+parseProdotto
+    = Prodotto 
+    <$> field notNullText
+    <*> field notNullText
+    <*> (field dontParse >> fields (readD 0))
 
-field p = Consume f where
-	f (L _ []) = Left "not enough fields"
-	f (L cs (r:rs)) = p r >>= \x -> return (x, L cs rs)
+parseCarico :: Consume L Carico
+parseCarico = do
+    hs <- parseHeaders
+    line 
+    textField "um"
+    textField "prodotto"
+    ps <- allLines parseProdotto
+    line
+    line >> textField "distribuzioni"
+    ds <- allLines $ field parseADate
+    return $ Carico hs ps ds
 
-fields p = Consume f where
-	f l@(L ls []) = return ([],l)
-	f (L cs (r:rs)) = p r >>= \x -> first (x:) <$> f (L cs rs)
-
-readE x = case reads x of
-	[(y,_)] -> Right y
-	_ -> Left "failed parsing a field"
-
-textField t = field $ \x ->
-	if x == t then Right ()
-		else Left "failed matching text field"
-
-readField :: Read a => Consume L a
-readField = field readE
-
-newtype IndigentiPerMese = IndigentiPerMese [Int] deriving Show
-
-header t = do
-	replicateM_ 2 (field $ const $ Right ())
-	textField t
-
-parseIndigenti = do
-	header "indigenti"
-	IndigentiPerMese <$> fields readE
-
-newtype DocumentoDiTrasporto = DocumentoDiTrasporto [Int] deriving Show
-
-parseDocumentoDiTrasporto = do
-	header "ddt"
-	DocumentoDiTrasporto <$> fields readE
+readCaricoFromFile :: FilePath -> IO Carico
+readCaricoFromFile f = do
+    ec <- parseCSVFromFile f
+    either error return $ do
+        c <- left show ec
+        fst <$> runConsume parseCarico (L c [])
 
 
-parsing = do
-	line
-	i <- parseIndigenti
-	line
-	d <- parseDocumentoDiTrasporto
-	return (i,d)
-main = do
-	csv <- parseCSVFromFile "carico agea 2016.csv"
-	case csv of
-		Left x -> print x
-		Right csv 
-			-> do print 
-			$ fmap fst 
-			$ runConsume parsing (L csv [])
