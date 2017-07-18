@@ -1,5 +1,6 @@
 {-# language DeriveFunctor #-}
 {-# language ExplicitForAll #-}
+module ParseCarico (readCaricoFromFile) where
 
 import Control.Monad
 import Text.CSV
