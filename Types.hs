@@ -19,8 +19,22 @@ data Prodotto = Prodotto
 data Carico = Carico 
     {   headers :: [Header]
     ,   prodotti :: [Prodotto]
-    ,   distribuzioni :: [Day]
+    ,   cdistribuzioni :: [Day]
     } deriving Show
 
+data Merce = Merce String String deriving Show
 
+data Distribuzione = 
+    Distribuzione 
+         {  giorno :: Day
+         ,  scarichi :: [(Merce,Int)]
+         ,  utenti :: Int
+         } deriving Show
+
+
+data Mese  = Mese
+    {   contesto :: Header
+    ,   distribuzioni :: [Day]
+    ,   ricariche :: [(Merce, Int)]
+    } deriving Show
 

@@ -1,0 +1,167 @@
+
+./Types.hs,481
+module Types Types0,1
+data Header Header4,5
+data Header = HeaderHeader4,5
+        {   indigenti indigenti5,6
+        ,   ddt ddt6,7
+        ,   date date7,8
+data Prodotto Prodotto11,12
+data Prodotto = ProdottoProdotto11,12
+    {   um um12,13
+    ,   nome nome13,14
+    ,   carico carico14,15
+data Carico Carico18,19
+data Carico = CaricoCarico18,19
+    {   headers headers19,20
+    ,   prodotti prodotti20,21
+    ,   distribuzioni distribuzioni21,22
+
+./ParseCarico.hs,504
+module ParseCarico ParseCarico2,3
+parseADate parseADate12,13
+parseADate parseADate13,14
+parseHeader parseHeader19,20
+parseHeaderparseHeader20,21
+parseHeaders parseHeaders26,27
+parseHeaders parseHeaders27,28
+notNullText notNullText33,34
+notNullText notNullText34,35
+parseProdotto parseProdotto38,39
+parseProdottoparseProdotto39,40
+parseCarico parseCarico45,46
+parseCarico parseCarico46,47
+readCaricoFromFile readCaricoFromFile57,58
+readCaricoFromFile readCaricoFromFile58,59
+
+./Setup.hs,15
+main main1,2
+
+./Parser.hs,726
+module Parser Parser3,4
+newtype Consume Consume9,10
+newtype Consume c a = Consume Consume9,10
+    runConsume runConsume10,11
+instance instance14,15
+data L L29,30
+data L = L L29,30
+line line31,32
+line line32,33
+allLines allLines36,37
+allLines allLines37,38
+field field46,47
+field field47,48
+fields fields51,52
+fields fields52,53
+readE readE56,57
+readE readE57,58
+readD readD61,62
+readD readD62,63
+textField textField64,65
+textField textField65,66
+readField readField69,70
+readField readField70,71
+transposeN transposeN72,73
+transposeN transposeN73,74
+dontParse dontParse80,81
+dontParse dontParse81,82
+push push83,84
+push push84,85
+count count86,87
+count count87,88
+
+./Algorithm.hs,584
+module Algorithm Algorithm0,1
+data Scarico Scarico7,8
+data Scarico = ScaricoScarico7,8
+    {   prodotto prodotto8,9
+    ,   quantitÃ quantitÃ9,10
+    ,   misura misura10,11
+data Distribuzione Distribuzione13,14
+    DistribuzioneDistribuzione14,15
+         {  giorno giorno15,16
+         ,  scarichi scarichi16,17
+         ,  utenti utenti17,18
+grouper grouper20,21
+grouper grouper21,22
+data Merce Merce26,27
+data Merce = Merce Merce26,27
+transposeProdotti transposeProdotti27,28
+transposeProdotti transposeProdotti28,29
+run run36,37
+run run37,38
+
+./Main.hs,52
+module Main Main0,1
+main main7,8
+main main8,9
+
+./dist/dist-sandbox-6cd00023/build/autogen/Paths_hemporio.hs,1245
+module Paths_hemporio Paths_hemporio3,4
+catchIO catchIO17,18
+catchIO catchIO19,20
+catchIO catchIO23,24
+catchIO catchIO25,26
+version version27,28
+version version28,29
+bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir sysconfdir29,30
+bindir, libdir, dynlibdir, datadir, libexecdir,libexecdir29,30
+bindir, libdir, dynlibdir, datadir,datadir29,30
+bindir, libdir, dynlibdir,dynlibdir29,30
+bindir, libdir,libdir29,30
+bindir,bindir29,30
+bindir bindir31,32
+libdir libdir32,33
+dynlibdir dynlibdir33,34
+datadir datadir34,35
+libexecdir libexecdir35,36
+sysconfdir sysconfdir36,37
+getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir getSysconfDir38,39
+getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir,getLibexecDir38,39
+getBinDir, getLibDir, getDynLibDir, getDataDir,getDataDir38,39
+getBinDir, getLibDir, getDynLibDir,getDynLibDir38,39
+getBinDir, getLibDir,getLibDir38,39
+getBinDir,getBinDir38,39
+getBinDir getBinDir39,40
+getLibDir getLibDir40,41
+getDynLibDir getDynLibDir41,42
+getDataDir getDataDir42,43
+getLibexecDir getLibexecDir43,44
+getSysconfDir getSysconfDir44,45
+getDataFileName getDataFileName46,47
+getDataFileName getDataFileName47,48
+
+./dist/build/autogen/Paths_hemporio.hs,1245
+module Paths_hemporio Paths_hemporio3,4
+catchIO catchIO17,18
+catchIO catchIO19,20
+catchIO catchIO23,24
+catchIO catchIO25,26
+version version27,28
+version version28,29
+bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir sysconfdir29,30
+bindir, libdir, dynlibdir, datadir, libexecdir,libexecdir29,30
+bindir, libdir, dynlibdir, datadir,datadir29,30
+bindir, libdir, dynlibdir,dynlibdir29,30
+bindir, libdir,libdir29,30
+bindir,bindir29,30
+bindir bindir31,32
+libdir libdir32,33
+dynlibdir dynlibdir33,34
+datadir datadir34,35
+libexecdir libexecdir35,36
+sysconfdir sysconfdir36,37
+getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir getSysconfDir38,39
+getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir,getLibexecDir38,39
+getBinDir, getLibDir, getDynLibDir, getDataDir,getDataDir38,39
+getBinDir, getLibDir, getDynLibDir,getDynLibDir38,39
+getBinDir, getLibDir,getLibDir38,39
+getBinDir,getBinDir38,39
+getBinDir getBinDir39,40
+getLibDir getLibDir40,41
+getDynLibDir getDynLibDir41,42
+getDataDir getDataDir42,43
+getLibexecDir getLibexecDir43,44
+getSysconfDir getSysconfDir44,45
+getDataFileName getDataFileName46,47
+getDataFileName getDataFileName47,48

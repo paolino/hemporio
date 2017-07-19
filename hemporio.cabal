@@ -19,6 +19,6 @@ executable hemporio
   main-is:             Main.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base >=4.9 && <4.10, csv, time
+  build-depends:       base >=4.9 && <4.10, csv, time,text,  template, yaml, containers
   -- hs-source-dirs:      
   default-language:    Haskell2010
