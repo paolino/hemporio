@@ -2,9 +2,13 @@ module Main where
 
 import ParseCarico (readCaricoFromFile)
 import System.Environment
+import Algorithm
+import Types
 
 main :: IO ()
 main = do
     a:_ <- getArgs
-    readCaricoFromFile a >>= print
+    c <- readCaricoFromFile a 
+    mapM_ print $ transposeProdotti c
+
 
