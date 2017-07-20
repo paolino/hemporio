@@ -1,6 +1,9 @@
+{-# language GeneralizedNewtypeDeriving #-}
 module Types where
 
 import Data.Time
+
+newtype Quantity = Quantity Int deriving (Num,Eq,Show,Ord)
 
 data Header = Header 
         {   indigenti :: Int
@@ -8,33 +11,39 @@ data Header = Header
         ,   date :: Day
         } deriving Show
 
-
 data Prodotto = Prodotto 
-    {   um :: String
-    ,   nome :: String
-    ,   carico :: [Int]
+    {   nome :: String
+    ,   um :: String
+    } deriving Show
+
+data Serie = Serie
+    {   merce :: Prodotto
+    ,   carico :: [Quantity]
     } deriving Show
 
 
-data Carico = Carico 
-    {   headers :: [Header]
-    ,   prodotti :: [Prodotto]
-    ,   cdistribuzioni :: [Day]
+data Input = Input
+    {   headersI :: [Header]
+    ,   prodottiI :: [Serie]
+    ,   usciteI :: [Day]
     } deriving Show
 
-data Merce = Merce String String deriving Show
+
+type Scaffale a = [(Prodotto,a)]
+
+type Giacenza = Scaffale  (Quantity,Quantity)
 
 data Distribuzione = 
     Distribuzione 
-         {  giorno :: Day
-         ,  scarichi :: [(Merce,Int)]
-         ,  utenti :: Int
+         {  giornoD :: Day
+         ,  scaffaleD :: Giacenza
+         ,  utentiD :: Int
          } deriving Show
 
 
 data Mese  = Mese
-    {   contesto :: Header
-    ,   distribuzioni :: [Day]
-    ,   ricariche :: [(Merce, Int)]
+    {   headerM :: Header
+    ,   usciteM :: [Day]
+    ,   scaffaleM :: Scaffale Quantity
     } deriving Show
 

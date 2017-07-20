@@ -2,7 +2,7 @@
 {-# language OverloadedStrings #-}
 module Main where
 
-import ParseCarico (readCaricoFromFile)
+import ParseInput (readInputFromFile)
 import System.Environment
 import Algorithm
 import Types
@@ -19,19 +19,31 @@ import Data.Semigroup
 m $%$ k = maybe (error $ "chiave " ++ show k) id $ M.lookup k m 
 main :: IO ()
 main = do
-    csv:par:temp:out:_ <- getArgs
-    c <- readCaricoFromFile csv
+    csv:par:tempS:tempR:out:_ <- getArgs
+    c <- readInputFromFile csv
     r <- decodeFile par
     r <- case r of 
           Nothing -> error "sintassi in file par"
           Just r -> return r
-    t <- template <$> T.readFile temp
-
-    let ms  = map (renderDistribuzione2 r)
+    ts <- template <$> T.readFile tempS
+    tr <- template <$> T.readFile tempR
+    let ms  = map renderDistribuzione1
             . zip [1..]
-            $ transposeProdotti c >>= expandMese 
-    forM_ ms $ \m -> do
-        let t' = render t (m $%$)
-        LT.writeFile (out <> "/" <> T.unpack (m M.! "data") <> ".xhtml") $ t'
+            $ transposeProdotti c >>= snd . expandMese 
 
+    forM_ ms $ \m -> do
+        let m' = m <> r
+            t' = render ts (m' $%$)
+        LT.writeFile (out <> "/" <> T.unpack (m' M.! "data") <> ".xhtml") $ t'
+    let mr  = renderOutputs (19,3)
+            $ expandMese <$> transposeProdotti c
+
+    forM_ mr $ \m -> do
+        let m' = m <> r
+            t' = render tr (maybe "--" id . flip M.lookup m')
+        LT.writeFile 
+            (out    <>  "/registro." 
+                    <>  T.unpack (m' M.! "pagina")  
+                    <>  ".xhtml") 
+            $ t'
 

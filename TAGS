@@ -1,24 +1,6 @@
 
-./Types.hs,481
-module Types Types0,1
-data Header Header4,5
-data Header = HeaderHeader4,5
-        {   indigenti indigenti5,6
-        ,   ddt ddt6,7
-        ,   date date7,8
-data Prodotto Prodotto11,12
-data Prodotto = ProdottoProdotto11,12
-    {   um um12,13
-    ,   nome nome13,14
-    ,   carico carico14,15
-data Carico Carico18,19
-data Carico = CaricoCarico18,19
-    {   headers headers19,20
-    ,   prodotti prodotti20,21
-    ,   distribuzioni distribuzioni21,22
-
-./ParseCarico.hs,504
-module ParseCarico ParseCarico2,3
+./ParseInput.hs,482
+module ParseInput ParseInput2,3
 parseADate parseADate12,13
 parseADate parseADate13,14
 parseHeader parseHeader19,20
@@ -27,12 +9,65 @@ parseHeaders parseHeaders26,27
 parseHeaders parseHeaders27,28
 notNullText notNullText33,34
 notNullText notNullText34,35
-parseProdotto parseProdotto38,39
-parseProdottoparseProdotto39,40
-parseCarico parseCarico45,46
-parseCarico parseCarico46,47
-readCaricoFromFile readCaricoFromFile57,58
-readCaricoFromFile readCaricoFromFile58,59
+parseSerie parseSerie38,39
+parseSerieparseSerie39,40
+parseInput parseInput46,47
+parseInput parseInput47,48
+readInputFromFile readInputFromFile58,59
+readInputFromFile readInputFromFile59,60
+
+./Types.hs,1046
+module Types Types1,2
+newtype Quantity Quantity5,6
+newtype Quantity = Quantity Quantity5,6
+data Header Header7,8
+data Header = HeaderHeader7,8
+        {   indigenti indigenti8,9
+        ,   ddt ddt9,10
+        ,   date date10,11
+data Prodotto Prodotto13,14
+data Prodotto = ProdottoProdotto13,14
+    {   nome nome14,15
+    ,   um um15,16
+data Serie Serie18,19
+data Serie = SerieSerie18,19
+    {   merce merce19,20
+    ,   carico carico20,21
+data Input Input24,25
+data Input = InputInput24,25
+    {   headersI headersI25,26
+    ,   prodottiI prodottiI26,27
+    ,   usciteI usciteI27,28
+type Scaffale Scaffale31,32
+type Scaffale a a31,32
+type Giacenza Giacenza33,34
+data Distribuzione Distribuzione35,36
+    DistribuzioneDistribuzione36,37
+         {  giornoD giornoD37,38
+         ,  scaffaleD scaffaleD38,39
+         ,  utentiD utentiD39,40
+data Mese Mese43,44
+data Mese  = MeseMese43,44
+    {   headerM headerM44,45
+    ,   usciteM usciteM45,46
+    ,   scaffaleM scaffaleM46,47
+
+./ParseCarico.hs,482
+module ParseInput ParseInput2,3
+parseADate parseADate12,13
+parseADate parseADate13,14
+parseHeader parseHeader19,20
+parseHeaderparseHeader20,21
+parseHeaders parseHeaders26,27
+parseHeaders parseHeaders27,28
+notNullText notNullText33,34
+notNullText notNullText34,35
+parseSerie parseSerie38,39
+parseSerieparseSerie39,40
+parseInput parseInput46,47
+parseInput parseInput47,48
+readInputFromFile readInputFromFile58,59
+readInputFromFile readInputFromFile59,60
 
 ./Setup.hs,15
 main main1,2
@@ -70,31 +105,31 @@ push push84,85
 count count86,87
 count count87,88
 
-./Algorithm.hs,584
-module Algorithm Algorithm0,1
-data Scarico Scarico7,8
-data Scarico = ScaricoScarico7,8
-    {   prodotto prodotto8,9
-    ,   quantitÃ quantitÃ9,10
-    ,   misura misura10,11
-data Distribuzione Distribuzione13,14
-    DistribuzioneDistribuzione14,15
-         {  giorno giorno15,16
-         ,  scarichi scarichi16,17
-         ,  utenti utenti17,18
-grouper grouper20,21
-grouper grouper21,22
-data Merce Merce26,27
-data Merce = Merce Merce26,27
-transposeProdotti transposeProdotti27,28
-transposeProdotti transposeProdotti28,29
-run run36,37
-run run37,38
+./Algorithm.hs,565
+module Algorithm Algorithm1,2
+repart repart12,13
+repart repart13,14
+ripartizioneMensile ripartizioneMensile17,18
+ripartizioneMensile ripartizioneMensile18,19
+conGiacenza conGiacenza22,23
+conGiacenza conGiacenza23,24
+grouper grouper27,28
+grouper grouper28,29
+transposeProdotti transposeProdotti34,35
+transposeProdotti transposeProdotti35,36
+type Output Output43,44
+expandMese expandMese44,45
+expandMeseexpandMese45,46
+tshow tshow53,54
+tshow tshow54,55
+onlyPositive onlyPositive56,57
+renderDistribuzione1 renderDistribuzione163,64
 
-./Main.hs,52
-module Main Main0,1
-main main7,8
-main main8,9
+./Main.hs,67
+module Main Main2,3
+m m18,19
+main main19,20
+main main20,21
 
 ./dist/dist-sandbox-6cd00023/build/autogen/Paths_hemporio.hs,1245
 module Paths_hemporio Paths_hemporio3,4
