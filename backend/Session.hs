@@ -1,4 +1,39 @@
-{-# language GADTs, UndecidableInstances, TypeFamilies, DataKinds, KindSignatures, PolyKinds, TypeInType, FlexibleContexts, MultiParamTypeClasses, AllowAmbiguousTypes, TemplateHaskell, StandaloneDeriving, Rank2Types, DeriveFunctor, ConstraintKinds  #-}
+{-# language GADTs#-}
+{-# language UndecidableInstances#-}
+{-# language TypeFamilies#-}
+{-# language DataKinds#-}
+{-# language KindSignatures#-}
+{-# language PolyKinds#-}
+{-# language TypeInType#-}
+{-# language FlexibleContexts#-}
+{-# language MultiParamTypeClasses#-}
+{-# language AllowAmbiguousTypes#-}
+{-# language TemplateHaskell#-}
+{-# language StandaloneDeriving#-}
+{-# language Rank2Types#-}
+{-# language DeriveFunctor#-}
+{-# language ConstraintKinds,DuplicateRecordFields#-}
+{-# language DisambiguateRecordFields #-}
+{-# language ScopedTypeVariables #-}
+
+-- Type safe machinary (mostly boilerplate) to handle session as paths through resources
+-- 
+-- Session is a backend/frontend agreement on what is the context user actions are to be intended
+--
+-- In this project, we want to allow resources to be indexed by tags in reality.
+-- The user interaction context (session) is then defined (mostly)  by the (valid) sequence of tags
+-- (scanned in reality or fed as links from client UI)
+--
+-- This is a brutal disruption with URI based API, mitigated (and superseeded ?) by the *augmenting reality* 
+-- way of semantic disambiguation. 
+--
+-- Hypothesys: the effect of sequencing scans (logic path) of a 4D tagged reality is 
+--              such a gain in the user experience, both in term of system knowledge (service semantic) 
+--              and in term of interaction model (reality as virtuality indexer), 
+--              that we can give up access to resources  as URI 
+--              and start using them as component of a vectorial/relational interaction model.
+
+module Session where
 
 import Data.Kind
 import Data.Map (Map)
@@ -41,8 +76,12 @@ session =
     ]
 -}
 
+
+type family Password a
+
+data Protectable a = Protectable a | Locked (Password a) a | Unlocked a
 data Method a 
-    = Protectable a -- admit data level protection
+    = Protactable a -- admit data level protection
     | Read a -- readeable
     | Write a  -- definable and modifyable
     deriving Show
@@ -100,84 +139,108 @@ data Content p (k :: Index) (a :: Resource) where
 
 -- protection state functor
 
-type family Password p
-type ProtectionK = Type -> Type -> Type
-data Protection p c = Protected (Password p) c | Unprotected c
+data Protection c = Protected (Password c) c | Protectable c | UnProtectable c
         deriving Functor
 
-newtype IdentityF p a = IdentityF {runIdentityF :: a} deriving Functor
--- concrete in memory mapping from an index of a resource to its content  
--- inside a functor 
 
-type M p (f :: ProtectionK) (k :: Index) (r :: Resource) 
-    = Map (k r) (f p (Content p k r))
+-- higher kinded Identity to absorb 'p'
+newtype IdentityF p a = IdentityF {runIdentityF :: a} deriving Functor
+
+-- concrete in memory mapping from an index of a resource to its content  
+-- still to be monad parametrized
+--
+-- mapping from index to protected resources
+type MP p (k :: Index) (r :: Resource) 
+    = Map (k r) (Protection p (Content p k r))
+
+-- mapping from index to resources
+type M p (k :: Index) (r :: Resource) 
+    = Map (k r) (Protection (Content p k r))
 
 data Database p k = Database 
-    {   _utenti         :: M p Protection k Utente
-    ,   _amministratori   :: M p Protection k Amministratore
-    ,   _empori         :: M p IdentityF k Emporio
-    ,   _prodotti       :: M p IdentityF k Prodotto
-    ,   _acquisti       :: M p IdentityF k Acquisto
-    ,   _distribuzioni  :: M p IdentityF k Distribuzione
-    ,   _super          :: Protection p (k Super)
+    {   _utenti             :: M p k Utente -- can be password protected
+    ,   _amministratori     :: M p k Amministratore -- can be password protected
+    ,   _empori             :: M p k Emporio 
+    ,   _prodotti           :: M p k Prodotto
+    ,   _acquisti           :: M p k Acquisto
+    ,   _distribuzioni      :: M p k Distribuzione
+    ,   _super              :: Protection p (k Super) -- one only su
     }
 
 makeLenses ''Database
 
---
-insertDB :: Ord (k a) => k a -> Content p k a -> Database p k -> Database p k
-insertDB k c@(ContentUtente{}) = over utenti $ Map.insert k (Unprotected c)
-insertDB k c@(ContentProdotto{}) = over prodotti $ Map.insert k (IdentityF c)
-    {- ............. -}
-insertDB k c@(ContentDistribuzione{}) = over distribuzioni $ Map.insert k (IdentityF c)
+-- declination of new resources insertion, driven by Content contructor in picking 'r'
+insertDB :: Ord (k r) => k r -> Content p k r -> Database p k -> Database p k
+insertDB k c@(ContentUtente{})          = over utenti           $ Map.insert k (Unprotected c)
+insertDB k c@(ContentProdotto{})        = over prodotti         $ Map.insert k c
+insertDB k c@(ContentAmministratore{})  = over amministratori   $ Map.insert k (Unprotected c)
+insertDB k c@(ContentDistribuzione{})   = over distribuzioni    $ Map.insert k c
+insertDB k c@(ContentAcquisto{})        = over acquisti         $ Map.insert k c
+insertDB k c@(ContentEmporio{})         = over empori           $ Map.insert k c
 
-data QR i (a :: Resource) where
+-- fixing the fact that we will use one common underlying type  for indexing
+data QR i (r :: Resource) where
     QRUtente            :: i -> QR i Utente 
     QRAmministratore    :: i -> QR i Amministratore
     QREmporio           :: i -> QR i Emporio
     QRDistribuzione     :: i -> QR i Distribuzione
     QRProdotto          :: i -> QR i Prodotto
 
-qrKey :: QR i a -> i
+-- extracting the real key
+-- can't make this inline due to the GADTs  ? (investigate)
+qrKey :: QR i r -> i
 qrKey (QRUtente i) = i
 qrKey (QRAmministratore i) = i
 qrKey (QREmporio i) = i
 qrKey (QRProdotto i) = i
 qrKey (QRDistribuzione i) = i
 
-deriving instance Eq i => Eq (QR i a)
+-- promoting Qr i to be a Map key argument
+deriving instance Eq i => Eq (QR i r)
 
-instance Ord i => Ord (QR i a) where
+instance Ord i => Ord (QR i r) where
     compare = comparing qrKey
 
-onMember :: (Ord k) => (k -> r) -> k -> Map k a -> r -> r
-onMember f k m r = if k `Map.member` m then f k else r
+-- CPS Map key membership
+onMember :: (Ord k) => (k -> r) -> r -> k -> Map k a -> r
+onMember f r k m = if k `Map.member` m then f k else r
 
-identifyResource :: Ord i =>  Database p (QR i) ->  i -> (forall a. QR i a -> Maybe r) -> Maybe r
+-- CPS searching a key in the database, do something with the key if member checked
+identifyResource :: Ord i =>  Database p (QR i) ->  i -> (forall r. QR i r -> Maybe a) -> Maybe a
+identifyResource db i  f
+    =   onMember f Nothing (QRUtente i) (db ^. utenti) 
+    <|> onMember f Nothing (QRAmministratore i) (db ^. amministratori) 
+    <|> onMember f Nothing (QREmporio i) (db ^. empori) 
+    <|> onMember f Nothing (QRProdotto i) (db ^. prodotti) 
+    <|> onMember f Nothing (QRDistribuzione i) (db ^. distribuzioni) 
 
-identifyResource db i f
-    =   onMember f (QRUtente i) (db ^. utenti) Nothing 
-    <|> onMember f (QRAmministratore i) (db ^. amministratori) Nothing
-    {- .............. -}
 --------------------------------------------------------------------------
 --
--- context monoid to be zipped to a path
+-- context monoid to be zipped to r path
+-- every resource added to the path introduces its key in the context
+-- we need a polymorphic container, but as we have a finite set of types
+--   DMAP applies. 
+-- For the rank of Ctx we cannot derive the necessary instances for the keys
 --
 -- ----------------------------------------------------------
 
--- Keys of a DMAP each holding a typed index [CtxEmporio :=> value of typr (k Emporio),.....] 
-data Ctx k a where
+-- Keys of r DMAP each holding r typed index [CtxEmporio :=> value of typr (k Emporio),.....] 
+data Ctx k r where
     CtxEmporio          :: Ctx k (k Emporio)
     CtxAmministratore   :: Ctx k (k Amministratore)
     CtxUtente           :: Ctx k (k Utente)
     CtxProdotto         :: Ctx k (k Prodotto)
     CtxDistribuzione    :: Ctx k (k Distribuzione)
 
-insertCtx :: Ctx k (k r) -> k r -> DMap (Ctx k) Identity -> DMap (Ctx k) Identity
-insertCtx k v = insert k $ Identity v
--- modifyCtx k f v = insertWith (\(Identity v1) (Identity v2) -> Identity (f v1 v2)) k (Identity v)
+-- specialise to Identity
+type IdentityCtx k = DMap (Ctx k) Identity
 
-getCtx :: Ctx k (k r)  -> DMap (Ctx k) Identity  -> k r
+-- insert an typed index
+insertCtx :: Ctx k (k r) -> k r -> IdentityCtx k -> IdentityCtx k
+insertCtx k v = insert k $ Identity v
+
+-- get a typed index
+getCtx :: Ctx k (k r)  -> IdentityCtx k  -> k r
 getCtx k = runIdentity . flip (!) k
 
 -- gimme TH. this is not deriveGEQ compatible due to the k :-/
@@ -205,31 +268,96 @@ instance GCompare (Ctx k) where
     CtxAmministratore `gcompare` _ = GLT
     _ `gcompare` CtxAmministratore = GGT
     CtxDistribuzione `gcompare` CtxDistribuzione = GEQ
-    CtxDistribuzione `gcompare` _ = GLT
-    _ `gcompare` CtxDistribuzione = GGT
+    -- CtxDistribuzione `gcompare` _ = GLT
+    -- _ `gcompare` CtxDistribuzione = GGT
+------------------------------------------------------------
 
-type MContext k = DMap (Ctx k) Identity
-type CtxPath i = [(Method Resource, MContext (QR i))]
+-- our final session path augmented with the context of the indexed key
+-- [    (p0 :: Read Distribuzione, fromList [CtxDistribuzione :=> QRDistribuzione (n :: i)])
+-- ,    (   p1 :: Read Utente 
+--          ,   fromList 
+--                  [   CtxDistribuzione :=> QRDistribuzione (n :: i)]
+--                  ,   CtxUtente :=> QRUtente (nu :: i)
+--                  ] 
+--      )
+-- ]
+-- the succ context is always by-one bigger the the previous, we already keep them like this 
+-- for a session back jump forecasting
+-- the client session should just query the last context 
+
+type CtxPath i = [(Method Resource, IdentityCtx (QR i))]
+
 ------------------------------------------------------------------------------------------------
 ---
--- trie like context selection, where the search trie is ^session^ which we are not using :-/
+-- handling by-resource access, which is the core functionality
+-- 
+--
+-- trie like context selection, where the search trie is ^session^ value in the comments
+-- which we are not using :-/, the trie here is small 
+--
+-- the idea is to step 
+--
 --
 ------------------------------------------------------------------------------------
-oldResource :: forall p i a . Ord i => Database p (QR i) -> CtxPath i -> i -> Maybe (CtxPath i)
+
+
+-- match a resource index in the database
+oldResource :: forall p i . Ord i => Database p (QR i) -> CtxPath i -> i -> Maybe (CtxPath i)
 -- unlogged access
 oldResource db [] i = identifyResource db i f where
-    f :: QR i a -> Maybe (CtxPath i)
+    f :: QR i r -> Maybe (CtxPath i)
     -- amministratore password
     f q@(QRAmministratore u) = return [(Protectable Amministratore,insertCtx CtxAmministratore q $ mempty)]
     -- utente password
+    f q@(QRUtente u) = return [(Protectable Utente,insertCtx CtxUtente q $ mempty)]
     -- super password
+    f q@(QRUtente u) = return [(Protectable Super,mempty)]
     -- distribuzione read
+    f q@(QRDistribuzione u) = return [(Read Distribuzione,insertCtx CtxDistribuzione q $ mempty)]
     f _ = Nothing
--- super -> emporio selection
--- super + emporio + amministrazione
 
-class Default u a where
-    def :: u -> a
+-- super -> emporio selection
+oldResource db p@[(Protectable Super,w)] i = identifyResource db i f where
+    f :: QR i r -> Maybe (CtxPath i)
+    f q@(QREmporio u) = return $ p ++ [(Write Emporio, insertCtx CtxEmporio q w)]
+    f _ = Nothing
+
+-- super + emporio + amministrazione
+oldResource db 
+            p@      [    (Protectable Super, _)
+                    ,    (Write Emporio, w )
+                    ] 
+            i = identifyResource db i f where
+    f :: QR i r -> Maybe (CtxPath i)
+    f q@(QRAmministratore u) = return $ p ++ [(Write Amministratore,insertCtx CtxAmministratore q w)]
+    f _ = Nothing
+
+-- amministratore + distribuzione
+oldResource db p@[  (Protectable Amministratore, _)
+                 ,  (Write Distribuzione,w)
+                    ] i = (p ++) <$> identifyResource db i f where
+    f :: QR i r -> Maybe (CtxPath i)
+    f q@(QRDistribuzione u) = return [(Write Distribuzione, insertCtx CtxDistribuzione q w)]
+    f q@(QRUtente u)        = return [(Write Utente, insertCtx CtxUtente q w)]
+    f q@(QRProdotto u)      = return [(Write Prodotto, insertCtx CtxProdotto q w)]
+    f _ = Nothing
+
+oldResource db p@   [  (Read Distribuzione,w)
+                    ]
+                i = (p ++) <$> identifyResource db i f where
+    f :: QR i r -> Maybe (CtxPath i)
+    f q@(QRUtente u) =      return [(Read Utente, insertCtx CtxUtente q w)]
+    f _ = Nothing
+
+oldResource db p@   [  (Read Distribuzione,_)
+                    ,  (Read Utente, w)
+                    ]
+                i = (p ++) <$> identifyResource db i f where
+    f :: QR i r -> Maybe (CtxPath i)
+    f q@(QRUtente u) =      return [(Read Utente, insertCtx CtxUtente q w)] -- swap utente
+    f _ = Nothing
+class Default u r where
+    def :: u -> r
 
 type Defaulting p i  =
                 ( Default () (Name p Utente) 
